@@ -9,3 +9,5 @@ figures/*.png
 **.ipynb_checkpoints
 
 /challenge/estimator.pkl
+/datasets/load2_cancellation_labels.csv
+/datasets/load2_df.csv

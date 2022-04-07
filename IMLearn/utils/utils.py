@@ -33,7 +33,10 @@ def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .7
         Responses of test samples
 
     """
-    raise NotImplementedError()
+    msk = np.random.rand(len(y)) < train_proportion
+    train_X, train_y = X[msk], y[msk]
+    test_X, test_y = X[~msk], y[~msk]
+    return train_X, train_y, test_X, test_y
 
 
 def confusion_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
