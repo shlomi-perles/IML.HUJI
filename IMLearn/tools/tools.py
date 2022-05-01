@@ -1,5 +1,6 @@
 import sys
 import matplotlib
+import matplotlib.style as pltstyle
 import matplotlib.pyplot as plt
 
 
@@ -19,11 +20,14 @@ def progressbar(it, prefix="Progress: ", size=60):
 
 
 def set_nicer_ploting():
+    style = 'seaborn-darkgrid'
+    # style = 'ggplot'
+    pltstyle.use(style)
+    font_size = 52 if style == "seaborn" else 22
     matplotlib.rc('text', usetex=True)
-    matplotlib.rc('font', **{'family': "sans-serif"})
-    pa = {'text.latex.preamble': [r'\usepackage{amsmath}']}
+    matplotlib.rc('font', **{'family': "sans-serif", 'size': font_size})
+    pa = {'text.latex.preamble': r'\usepackage{amsmath}'}
     plt.rcParams.update(pa)
-    # plt.rc('font', size=10)
 
 
 def plot_confidence_interval(x, variance, average, label, variance_factor=2):
@@ -38,4 +42,3 @@ def plot_confidence_interval(x, variance, average, label, variance_factor=2):
     ax.plot(x, average - variance_factor * variance, lw=1, color='gray', alpha=0.4)
     ax.fill_between(x, average + 2 * variance, average - 2 * variance, color='gray', alpha=0.2)
     return fig, ax
-

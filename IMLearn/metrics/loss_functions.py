@@ -18,6 +18,7 @@ def mean_square_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     return np.square(np.subtract(y_true, y_pred)).mean()
 
+
 def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: bool = True) -> float:
     """
     Calculate misclassification loss
@@ -35,7 +36,8 @@ def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: b
     -------
     Misclassification of given predictions
     """
-    raise NotImplementedError()
+    miss_loss = (y_true != y_pred).sum()
+    return miss_loss / len(y_true) if normalize else miss_loss
 
 
 def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -53,7 +55,7 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     Accuracy of given predictions
     """
-    raise NotImplementedError()
+    return (y_true == y_pred).mean()
 
 
 def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:

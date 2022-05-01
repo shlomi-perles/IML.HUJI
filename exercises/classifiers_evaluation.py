@@ -4,6 +4,18 @@ from utils import *
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from math import atan2, pi
+from IMLearn.metrics import accuracy
+from pathlib import Path
+from IMLearn.tools import *
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+import re
+
+DATA_PATH = Path(__file__).parent.parent / "datasets"
+OUT_DIR = Path(__file__).parent.parent.parent / "exrecise/ex3/"
+MESHGRID_STEPS = 0.01
+GAUS_DATASET = ["gaussian1.npy", "gaussian2.npy"]
+PERCEP_DATASET = ["linearly_separable.npy", "linearly_inseparable.npy"]
 
 
 def load_dataset(filename: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -36,16 +48,29 @@ def run_perceptron():
     Create a line plot that shows the perceptron algorithm's training loss values (y-axis)
     as a function of the training iterations (x-axis).
     """
-    for n, f in [("Linearly Separable", "linearly_separable.npy"), ("Linearly Inseparable", "linearly_inseparable.npy")]:
+    for dataset in PERCEP_DATASET:
         # Load dataset
-        raise NotImplementedError()
+        data_path = DATA_PATH / dataset
+        X, y = load_dataset(str(data_path))
 
         # Fit Perceptron and record loss in each fit iteration
         losses = []
-        raise NotImplementedError()
+
+        def callback(perceptron_est, *args):
+            losses.append(perceptron_est.loss(X, y))
+
+        Perceptron(callback=callback, include_intercept=True).fit(X, y)
 
         # Plot figure of loss as function of fitting iteration
-        raise NotImplementedError()
+        plt.clf()
+        re_dataset = re.split(r"_|\.", dataset)
+        dataset_name = (re_dataset[0] + " " + re_dataset[1]).title()
+        plt.plot(list(range(1, len(losses) + 1)), losses)
+        plt.xlabel("Fitting Iteration")
+        plt.ylabel("Loss")
+        plt.title(f"Loss of as function of Fitting Iteration - {dataset_name}")
+        plt.show()
+        plt.clf()
 
 
 def get_ellipse(mu: np.ndarray, cov: np.ndarray):
@@ -70,37 +95,63 @@ def get_ellipse(mu: np.ndarray, cov: np.ndarray):
     xs = (l1 * np.cos(theta) * np.cos(t)) - (l2 * np.sin(theta) * np.sin(t))
     ys = (l1 * np.sin(theta) * np.cos(t)) + (l2 * np.cos(theta) * np.sin(t))
 
-    return go.Scatter(x=mu[0] + xs, y=mu[1] + ys, mode="lines", marker_color="black")
+    return plt.plot(mu[0] + xs, mu[1] + ys, marker="_", color="black")
 
 
 def compare_gaussian_classifiers():
     """
     Fit both Gaussian Naive Bayes and LDA classifiers on both gaussians1 and gaussians2 datasets
     """
-    for f in ["gaussian1.npy", "gaussian2.npy"]:
+    for dataset in GAUS_DATASET:
         # Load dataset
-        raise NotImplementedError()
+        data_path = DATA_PATH / dataset
+        X, y = load_dataset(str(data_path))
 
         # Fit models and predict over training set
-        raise NotImplementedError()
+        lda, gnb = LDA(), GaussianNaiveBayes()
+        estimators = {lda, gnb}
+        lda.fit(X, y)
+        gnb.fit(X, y)
+        colors = ("orange", "blue", "red")
 
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
         # Create subplots
-        from IMLearn.metrics import accuracy
-        raise NotImplementedError()
 
-        # Add traces for data-points setting symbols and colors
-        raise NotImplementedError()
+        for estimator in estimators:
+            X1, X2 = np.meshgrid(np.arange(X[:, 0].min() - 1, X[:, 0].max() + 1, MESHGRID_STEPS),
+                                 np.arange(X[:, 1].min() - 1, X[:, 1].max() + 1, MESHGRID_STEPS))
+            # Add traces for data-points setting symbols and colors
+            for cls, j in enumerate(np.unique(y)):
+                plt.scatter(X[y == j, 0], X[y == j, 1],
+                            color=ListedColormap(colors)(cls), label=j)
 
-        # Add `X` dots specifying fitted Gaussians' means
-        raise NotImplementedError()
+            # Add `X` dots specifying fitted Gaussians' means
 
-        # Add ellipses depicting the covariances of the fitted Gaussians
-        raise NotImplementedError()
+            plt.contourf(X1, X2, estimator.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+                         alpha=0.4, cmap=ListedColormap(colors))
+            plt.xlim(X1.min(), X1.max())
+            plt.ylim(X2.min(), X2.max())
+            plt.legend(frameon=True)
+            plt.axis('off')
+
+            y_pred = estimator.predict(X)
+
+            # Add ellipses depicting the covariances of the fitted Gaussians
+            for cls in range(len(estimator.classes_)):
+                plt.scatter(estimator.mu_[cls][0], estimator.mu_[cls][1], marker="x", color="black")
+
+                if estimator == lda:
+                    plt.title(f"LDA predict, accuracy = ${accuracy(y, y_pred)}$")
+                    get_ellipse(estimator.mu_[cls], estimator.cov_)
+                else:
+                    plt.title(f"Gaussian predict, accuracy = ${accuracy(y, y_pred)}$")
+                    get_ellipse(estimator.mu_[cls], np.array([[gnb.vars_[cls][0], 0], [0, gnb.vars_[cls][1]]]))
+            plt.show()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
+    set_nicer_ploting()
     run_perceptron()
     compare_gaussian_classifiers()
