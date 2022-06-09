@@ -21,15 +21,17 @@ def progressbar(it, prefix="Progress: ", size=60):
 
 
 def set_nicer_ploting():
-    style = 'seaborn-darkgrid'
+    # style = 'seaborn-darkgrid'
     # style = 'ggplot'
+    style = 'default'
     use(style)
-    font_size = 52 if style == "seaborn" else 22
+    font_size = 52 if style == "seaborn" else 18
     rc('text', usetex=True)
     rc('font', **{'family': "sans-serif", 'size': font_size}, )
     pa = {'text.latex.preamble': r'\usepackage{amsmath}',
           "axes.grid": True, 'axes.axisbelow': True}
     rcParams.update(pa)
+    plt.rcParams["axes.titlesize"] = 17
 
 
 def plot_confidence_interval(x, variance, average, label, variance_factor=2):
