@@ -1,6 +1,7 @@
 import sys
 import matplotlib
-import matplotlib.style as pltstyle
+from matplotlib import rc, rcParams
+from matplotlib.style import use
 import matplotlib.pyplot as plt
 
 
@@ -22,12 +23,13 @@ def progressbar(it, prefix="Progress: ", size=60):
 def set_nicer_ploting():
     style = 'seaborn-darkgrid'
     # style = 'ggplot'
-    pltstyle.use(style)
+    use(style)
     font_size = 52 if style == "seaborn" else 22
-    matplotlib.rc('text', usetex=True)
-    matplotlib.rc('font', **{'family': "sans-serif", 'size': font_size})
-    pa = {'text.latex.preamble': r'\usepackage{amsmath}'}
-    plt.rcParams.update(pa)
+    rc('text', usetex=True)
+    rc('font', **{'family': "sans-serif", 'size': font_size}, )
+    pa = {'text.latex.preamble': r'\usepackage{amsmath}',
+          "axes.grid": True, 'axes.axisbelow': True}
+    rcParams.update(pa)
 
 
 def plot_confidence_interval(x, variance, average, label, variance_factor=2):
