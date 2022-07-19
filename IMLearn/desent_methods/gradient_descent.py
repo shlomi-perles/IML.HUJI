@@ -120,29 +120,27 @@ class GradientDescent:
                 Euclidean norm of w^(t)-w^(t-1)
 
         """
+        selected_weight = f.weights
         best_out = f.compute_output(X=X, y=y)
         weights_sum = np.zeros(f.weights.shape)
-        selected_weight = f.weights
+        grad = f.compute_jacobian(X=X, y=y)
 
-        counter = 0
-        for t in range(self.max_iter_):
-            counter += 1
-
-            eta = self.learning_rate_.lr_step(t=t)
-            grad = f.compute_jacobian(X=X, y=y)
+        t = 0
+        while t < self.max_iter_:
             last_weights = f.weights
-            f.weights = f.weights - eta * grad / np.linalg.norm(grad)
-            weights_sum += f.weights
-
-            cur_out = f.compute_output(X=X, y=y)
-            if cur_out < best_out:
-                selected_weight = f.weights
-                best_out = cur_out
-
+            eta = self.learning_rate_.lr_step(t=t)
+            f.weights = f.weights - eta * grad
             delta = np.linalg.norm(f.weights - last_weights, ord=2)
+            cur_out = f.compute_output(X=X, y=y)
+
+            if cur_out < best_out:
+                best_out = cur_out
+                selected_weight = f.weights
+
+            weights_sum += f.weights
+            grad = f.compute_jacobian(X=X, y=y)
+            self.callback_(solver=self, weights=f.weights, val=cur_out, grad=grad, t=t, eta=eta, delta=delta)
             if delta < self.tol_: break
+            t += 1
 
-            self.callback_(solver=self, weights=f.weights, val=cur_out, grad=grad, t=t, eta=eta,
-                           delta=delta)
-
-        return selected_weight / counter if self.out_type_ == "best" else f.weights / counter if self.out_type_ == "last" else weights_sum / counter
+        return selected_weight if self.out_type_ == "best" else f.weights if self.out_type_ == "last" else weights_sum / t
