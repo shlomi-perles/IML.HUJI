@@ -100,14 +100,14 @@ def animate_decision_boundary(nn: NeuralNetwork, weights: List[np.ndarray], lims
 def get_callback(**kwargs):
     values = []
     grads = []
-    weights = []
+    out_weights = []
 
     def callback(**kwargs):
         values.append(kwargs["val"])
         grads.append(kwargs["grad"])
-        weights.append(kwargs["weights"])
+        out_weights.append(kwargs["weights"])
 
-    return callback, values, grads, weights
+    return callback, values, grads, out_weights
 
 
 def plot_and_show_nn(modules, out_dir):

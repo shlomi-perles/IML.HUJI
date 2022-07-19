@@ -73,9 +73,6 @@ def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     Cross entropy of given predictions
     """
-    from sklearn.metrics import log_loss
-    return log_loss(y_true, y_pred)
-
     epsilon = 1e-5
     y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
 
