@@ -158,7 +158,6 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------#
     # Question 2: Fitting a network with no hidden layers                                          #
     # ---------------------------------------------------------------------------------------------#
-
     q2_modules = [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=n_classes, activation=ReLU(),
                                       include_intercept=True)]
     nn_2, values, grads, weights = plot_and_show_nn(q1_modules,
