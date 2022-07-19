@@ -158,7 +158,7 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------#
     # Question 2: Fitting a network with no hidden layers                                          #
     # ---------------------------------------------------------------------------------------------#
-    q2_modules = [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=n_classes, activation=ReLU(),
+    q2_modules = [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=n_classes, activation=Identity(),
                                       include_intercept=True)]
     nn_2, values, grads, weights = plot_and_show_nn(q1_modules,
                                                     OUT_DIR / f"{len(q2_modules)}_layers_nn_{hidden_size}.png")
@@ -173,11 +173,12 @@ if __name__ == '__main__':
                               save_name=OUT_DIR / "simple_network_animation.gif")
 
     # plot convergence of the objective function
-    fig = go.Figure(data=[go.Scatter(x=list(range(len(values))), y=[np.sum(value) for value in values])],
+    fig = go.Figure(data=[go.Scatter(x=np.arange(1, len(values) + 1), y=values, name="Loss")],
                     layout=go.Layout(title=r"$\text{Objective Function Convergence}$",
                                      xaxis=dict(title=r"$\text{Iteration}$"),
-                                     yaxis=dict(title=r"$\text{Objective}$")))
+                                     yaxis=dict(title=r"$\text{Loss}$")))
 
     # add norm of weights
-    fig.add_trace(go.Scatter(x=list(range(len(grads))), y=[np.linalg.norm(grad) for grad in grads]))
+    fig.add_trace(
+        go.Scatter(x=np.arange(1, len(grads) + 1), y=[np.linalg.norm(grad) for grad in grads], name="Gradient Norms"))
     fig.show()
