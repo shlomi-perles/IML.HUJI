@@ -111,6 +111,7 @@ def get_callback(**kwargs):
 
 
 def plot_and_show_nn(modules, out_dir):
+    callback, values, grads, weights = get_callback()
     nn = NeuralNetwork(
         modules=modules,
         loss_fn=CrossEntropyLoss(),
@@ -122,7 +123,7 @@ def plot_and_show_nn(modules, out_dir):
     fig = plot_decision_boundary(nn, lims, train_X, train_y, title=out_dir.stem)
     fig.write_image(out_dir)
     fig.show()
-    return nn
+    return nn, values, grads, weights
 
 
 if __name__ == '__main__':
@@ -144,7 +145,7 @@ if __name__ == '__main__':
     # Question 1: Fitting simple network with two hidden layers                                    #
     # ---------------------------------------------------------------------------------------------#
     hidden_size = 16
-    callback, values, grads, weights = get_callback()
+
     q1_modules = [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=hidden_size, activation=ReLU(),
                                       include_intercept=True),
                   FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(),
@@ -152,20 +153,16 @@ if __name__ == '__main__':
                   FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(),
                                       include_intercept=True)]
 
-    nn_1 = plot_and_show_nn(q1_modules, OUT_DIR / f"{len(q1_modules)}_layers_nn_{hidden_size}.png")
+    nn_1, _, _, _ = plot_and_show_nn(q1_modules, OUT_DIR / f"{len(q1_modules)}_layers_nn_{hidden_size}.png")
 
     # ---------------------------------------------------------------------------------------------#
     # Question 2: Fitting a network with no hidden layers                                          #
     # ---------------------------------------------------------------------------------------------#
-    nn_2 = NeuralNetwork(
-        modules=[FullyConnectedLayer(input_dim=n_features, output_dim=n_classes, activation=Identity(),
-                                     include_intercept=False)],
-        loss_fn=CrossEntropyLoss(),
-        solver=GradientDescent(max_iter=5000, learning_rate=FixedLR(1e-1)))
 
-    q2_modules = [FullyConnectedLayer(input_dim=n_features, output_dim=n_classes, activation=Identity(),
-                                      include_intercept=False)]
-    nn_2 = plot_and_show_nn(q1_modules, OUT_DIR / f"{len(q2_modules)}_layers_nn_{hidden_size}.png")
+    q2_modules = [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=n_classes, activation=Identity(),
+                                      include_intercept=True)]
+    nn_2, values, grads, weights = plot_and_show_nn(q1_modules,
+                                                    OUT_DIR / f"{len(q2_modules)}_layers_nn_{hidden_size}.png")
 
     # ---------------------------------------------------------------------------------------------#
     # Question 3+4: Plotting network convergence process                                           #
@@ -173,7 +170,7 @@ if __name__ == '__main__':
 
     # TODO:change
     # take each 100th iteration of the gradient descent and plot the decision boundary
-    animate_decision_boundary(nn_1, weights[::100], lims, train_X, train_y, title="Simple Network",
+    animate_decision_boundary(nn_2, weights[::100], lims, train_X, train_y, title="Simple Network",
                               save_name=OUT_DIR / "simple_network_animation.gif")
 
     # plot convergence of the objective function

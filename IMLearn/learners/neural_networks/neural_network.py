@@ -110,12 +110,13 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         -----
         Function stores all intermediate values in the `self.pre_activations_` and `self.post_activations_` arrays
         """
-        post_oi = X.copy()
         self.pre_activations_[0] = 0
-        self.post_activations_[0] = post_oi
+        self.post_activations_[0] = X.copy()
 
         for t, layer in enumerate(self.modules_):
-            self.pre_activations_[t + 1] = np.c_[np.ones(post_oi.shape[0]), self.post_activations_[t]] @ layer.weights \
+            self.pre_activations_[t + 1] = np.c_[
+                                               np.ones(self.post_activations_[t].shape[0]), self.post_activations_[
+                                                   t]] @ layer.weights \
                 if layer.include_intercept_ else self.post_activations_[t] @ layer.weights
 
             self.post_activations_[t + 1] = layer.compute_output(X=self.post_activations_[t])
