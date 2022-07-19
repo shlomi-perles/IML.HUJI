@@ -145,4 +145,4 @@ class GradientDescent:
             self.callback_(solver=self, weights=f.weights, val=cur_out, grad=grad, t=t, eta=eta,
                            delta=delta)
 
-        return selected_weight if self.out_type_ == "best" else f.weights if self.out_type_ == "last" else weights_sum / counter
+        return selected_weight / counter if self.out_type_ == "best" else f.weights / counter if self.out_type_ == "last" else weights_sum / counter

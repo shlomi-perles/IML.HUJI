@@ -127,7 +127,7 @@ class StochasticGradientDescent:
                            batch_indices=batch_indices)
             iteration += 1
 
-        return f.weights
+        return f.weights / iteration
 
     def _partial_fit(self, f: BaseModule, X: np.ndarray, y: np.ndarray, t: int) -> Tuple[np.ndarray, np.ndarray, float]:
         """

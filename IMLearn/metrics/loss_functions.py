@@ -73,6 +73,9 @@ def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     Cross entropy of given predictions
     """
+    # from sklearn.metrics import log_loss
+    # return log_loss(y_true, y_pred)
+
     epsilon = 1e-5
     y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
 
@@ -105,4 +108,4 @@ def softmax(X: np.ndarray) -> np.ndarray:
         Softmax(x) for every sample x in given data X
     """
     e_x = np.exp(X - np.max(X))
-    return e_x / e_x.sum()
+    return e_x / e_x.sum(axis=1, keepdims=True)

@@ -80,7 +80,7 @@ class FullyConnectedLayer(BaseModule):
         if self.activation_:
             return self.activation_.compute_output(X=X @ self.weights, **kwargs)
 
-        return X @ self.weights.T
+        return X @ self.weights
 
     def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -98,8 +98,7 @@ class FullyConnectedLayer(BaseModule):
         """
         if self.include_intercept_:
             X = np.c_[np.ones(X.shape[0]), X]
-
-        return np.einsum('ij,ik,ijk', X, self.activation_.compute_jacobian(X=X @ self.weights, **kwargs))
+        return np.einsum('ji,ki->jk', self.activation_.compute_jacobian(X=X), self.weights, **kwargs)
 
 
 class ReLU(BaseModule):
