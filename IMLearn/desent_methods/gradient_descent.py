@@ -139,9 +139,10 @@ class GradientDescent:
                 selected_weight = f.weights
                 best_out = cur_out
 
-            if np.linalg.norm(f.weights - last_weights, ord=2) < self.tol_: break
+            delta = np.linalg.norm(f.weights - last_weights, ord=2)
+            if delta < self.tol_: break
 
             self.callback_(solver=self, weights=f.weights, val=cur_out, grad=grad, t=t, eta=eta,
-                           delta=np.linalg.norm(f.weights - last_weights, ord=2))
+                           delta=delta)
 
         return selected_weight if self.out_type_ == "best" else f.weights if self.out_type_ == "last" else weights_sum / counter

@@ -24,6 +24,7 @@ class FullyConnectedLayer(BaseModule):
     include_intercept: bool
         Should layer include an intercept or not
     """
+
     def __init__(self, input_dim: int, output_dim: int, activation: BaseModule = None, include_intercept: bool = True):
         """
         Initialize a module of a fully connected layer
@@ -48,7 +49,14 @@ class FullyConnectedLayer(BaseModule):
         Weights are randomly initialized following N(0, 1/input_dim)
         """
         super().__init__()
-        raise NotImplementedError()
+        self.input_dim_ = input_dim
+        self.output_dim_ = output_dim
+        self.activation_ = activation
+        self.include_intercept_ = include_intercept
+
+        input_dim_fix = input_dim + 1 if self.include_intercept_ else input_dim
+
+        self.weights = np.random.normal(0, 1 / input_dim_fix, (input_dim_fix, output_dim))
 
     def compute_output(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -65,7 +73,14 @@ class FullyConnectedLayer(BaseModule):
         output: ndarray of shape (n_samples, output_dim)
             Value of function at point self.weights
         """
-        raise NotImplementedError()
+
+        if self.include_intercept_:
+            X = np.c_[np.ones(X.shape[0]), X]
+
+        if self.activation_:
+            return self.activation_.compute_output(X=X @ self.weights, **kwargs)
+
+        return X @ self.weights.T
 
     def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -81,7 +96,10 @@ class FullyConnectedLayer(BaseModule):
         output: ndarray of shape (input_dim, n_samples)
             Derivative with respect to self.weights at point self.weights
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.c_[np.ones(X.shape[0]), X]
+
+        return np.einsum('ij,ik,ijk', X, self.activation_.compute_jacobian(X=X @ self.weights, **kwargs))
 
 
 class ReLU(BaseModule):
@@ -103,7 +121,7 @@ class ReLU(BaseModule):
         output: ndarray of shape (n_samples, input_dim)
             Data after performing the ReLU activation function
         """
-        raise NotImplementedError()
+        return np.maximum(X, 0)
 
     def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -119,13 +137,14 @@ class ReLU(BaseModule):
         output: ndarray of shape (n_samples,)
             Element-wise derivative of ReLU with respect to given data
         """
-        raise NotImplementedError()
+        return np.sign(self.compute_output(X))
 
 
 class CrossEntropyLoss(BaseModule):
     """
     Module of Cross-Entropy Loss: The Cross-Entropy between the Softmax of a sample x and e_k for a true class k
     """
+
     def compute_output(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
         """
         Computes the Cross-Entropy over the Softmax of given data, with respect to every
@@ -145,7 +164,7 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples,)
             cross-entropy loss value of given X and y
         """
-        raise NotImplementedError()
+        return cross_entropy(y, softmax(X))
 
     def compute_jacobian(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -164,5 +183,44 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples, input_dim)
             derivative of cross-entropy loss with respect to given input
         """
-        raise NotImplementedError()
+        subs = np.zeros_like(X)
+        subs[np.arange(X.shape[0]), y] = 1
+        return softmax(X) - subs
 
+
+class Identity(BaseModule):
+
+    def compute_output(self, X: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Compute the output value of the function
+
+        Parameters
+        ----------
+        kwargs: Additional arguments to be passed and used by derived objects
+
+        Returns
+        -------
+        output: ndarray of shape (n_out,)
+            Value of function at `input`
+        """
+        return X
+
+    def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Compute the derivative of the function with respect to each of its parameters
+
+        Parameters
+        ----------
+        kwargs: Additional arguments to be passed and used by derived objects
+
+        Returns
+        -------
+        output: ndarray of shape (n_out, n_in)
+            Derivative of function with respect to its parameters at `input`
+
+        Examples
+        --------
+        For f:R^d->R defined by f(x) = <w,x> then: n_in=d, n_out=1 and thus output shape is (1,d)
+
+        """
+        return np.ones_like(X)

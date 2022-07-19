@@ -3,7 +3,7 @@ import numpy as np
 import gzip
 from typing import Tuple
 
-from IMLearn.metrics.loss_functions import accuracy
+from IMLearn.metrics.loss_functions import accuracy, cross_entropy
 from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, CrossEntropyLoss, softmax
 from IMLearn.learners.neural_networks.neural_network import NeuralNetwork
 from IMLearn.desent_methods import GradientDescent, StochasticGradientDescent, FixedLR
@@ -14,6 +14,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
+
 pio.templates.default = "simple_white"
 
 
@@ -76,10 +77,10 @@ def plot_images_grid(images: np.ndarray, title: str = ""):
     height, width = subset_images.shape[1:]
     grid = subset_images.reshape(side, side, height, width).swapaxes(1, 2).reshape(height * side, width * side)
 
-    return px.imshow(grid, color_continuous_scale="gray")\
+    return px.imshow(grid, color_continuous_scale="gray") \
         .update_layout(title=dict(text=title, y=0.97, x=0.5, xanchor="center", yanchor="top"),
-                       font=dict(size=16), coloraxis_showscale=False)\
-        .update_xaxes(showticklabels=False)\
+                       font=dict(size=16), coloraxis_showscale=False) \
+        .update_xaxes(showticklabels=False) \
         .update_yaxes(showticklabels=False)
 
 
@@ -87,6 +88,19 @@ if __name__ == '__main__':
     train_X, train_y, test_X, test_y = load_mnist()
     (n_samples, n_features), n_classes = train_X.shape, 10
 
+    y_pred = np.array([0.25, 0.25, 0.25, 0.25], dtype=np.float)
+    y_true = np.array([0, 0, 0, 1], dtype=np.float)
+
+    # y_pred = np.array([[0.25, 0.25, 0.25, 0.25],
+    #                    [0.01, 0.01, 0.01, 0.96]], dtype=np.float)
+    # y_true = np.array([[0, 0, 0, 1],
+    #                    [0, 0, 0, 1]], dtype=np.float)
+    ans = 0.71355817782  # Correct answer
+    x = cross_entropy(y_true, y_pred)
+    from sklearn.metrics import log_loss
+
+    c = log_loss(y_true, y_pred)
+    a = 1
     # ---------------------------------------------------------------------------------------------#
     # Question 5+6+7: Network with ReLU activations using SGD + recording convergence              #
     # ---------------------------------------------------------------------------------------------#
