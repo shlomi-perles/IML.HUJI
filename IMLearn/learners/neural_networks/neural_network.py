@@ -84,7 +84,7 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         loss : float
             Performance under specified loss function
         """
-        return self.loss_fn_.compute_output(X=self.compute_prediction(X), y=y)
+        return np.mean(self.loss_fn_.compute_output(X=self.compute_prediction(X), y=y))
 
     # endregion
 
@@ -121,9 +121,9 @@ class NeuralNetwork(BaseEstimator, BaseModule):
 
             self.post_activations_[t + 1] = layer.compute_output(X=self.post_activations_[t])
 
-        return self.loss_fn_.compute_output(X=self.post_activations_[-1], y=y, **kwargs)
+        return np.mean(self.loss_fn_.compute_output(X=self.post_activations_[-1], y=y, **kwargs))
 
-    def compute_prediction(self, X: np.ndarray):
+    def compute_prediction(self, X: np.ndarray) -> np.ndarray:
         """
         Compute network output (forward pass) with respect to modules' weights given input samples, except pass
         through specified loss function

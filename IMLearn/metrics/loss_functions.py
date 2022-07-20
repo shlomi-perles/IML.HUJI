@@ -79,7 +79,8 @@ def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     dup_y_true = np.zeros_like(y_pred)
     dup_y_true[np.arange(len(y_pred)), y_true] = 1
 
-    return -(dup_y_true * np.log(y_pred)).sum() / y_pred.shape[0]  # TODO: axis=1?
+    # return -(dup_y_true * np.log(y_pred)).sum() / y_pred.shape[0]  # TODO: axis=1?
+    return np.mean(-(dup_y_true * np.log(y_pred)), axis=1)  # TODO: axis=1?
 
 
 def softmax(X: np.ndarray) -> np.ndarray:
