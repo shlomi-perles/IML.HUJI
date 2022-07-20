@@ -190,22 +190,18 @@ def q8(train_X, train_y, test_X, test_y):
 
 def q9(nn, test_X, test_y):
     test_X_7 = test_X[test_y == 7]
-    # test_y_7 = test_y[test_y == 7]
-    #
-    # prediction_7 = nn.compute_prediction(test_X)
-    # sort_prediction_7 = np.argsort(np.max(prediction_7, axis=1))
-    # most_confident = sort_prediction_7[-hidden_size:]
-    # least_confident = sort_prediction_7[:hidden_size]
 
     pred = nn.compute_prediction(test_X_7).max(axis=1).argsort()
-
+    margins = MARGINS_DICT.copy()
+    margins["t"] = 38
+    margins["l"] = 0
     fig1 = plot_images_grid(test_X_7[pred[-64:]], title="Most Confident")
+    fig1['layout'].update(margin=margins)
     fig1.write_image(OUT_DIR / f"q9_most.svg")
-    fig1['layout'].update(margin=MARGINS_DICT)
     fig1.show()
 
     fig2 = plot_images_grid(test_X_7[pred[:64]], title="Least Confident")
-    fig2['layout'].update(margin=MARGINS_DICT)
+    fig2['layout'].update(margin=margins)
     fig2.write_image(OUT_DIR / f"q9_least.svg")
     fig2.show()
 
@@ -228,7 +224,7 @@ def q10(train_X, train_y):
         layout=go.Layout(width=FIGS_WIDTH, height=FIGS_HEIGHT, title=r"$\text{Runtime Differences Between SGD And GD}$",
                          xaxis=dict(title=r"$\text{Runtime [s]}$"),
                          yaxis=dict(title=r"$\text{Loss}$")))
-    fig['layout'].update(margin=fig['layout'].update(margin=MARGINS_DICT))
+    fig['layout'].update(margin=MARGINS_DICT)
     fig.write_image(OUT_DIR / f"q10_runtime_diff.svg")
     fig.show()
 
