@@ -98,10 +98,8 @@ class Callback:
     def __call__(self, *args, **kwargs):
         for att, value in self.__dict__.items():
             if att.endswith("_"): continue
-            if att == "times":
-                value[self.idx_] = time.time()
-                continue
-            value[self.idx_] = kwargs[att]
+            add = time.time() if att == "times" else np.linalg.norm(kwargs[att]) if att == "grad" else kwargs[att]
+            value[self.idx_] = add
         self.idx_ += 1
 
 
@@ -160,7 +158,7 @@ def q7(train_X, train_y, test_X, test_y, net_only=False):
         FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(), include_intercept=True)]
     nn = NeuralNetwork(modules=modules7, loss_fn=CrossEntropyLoss(),
                        solver=StochasticGradientDescent(learning_rate=FixedLR(0.1), max_iter=10000, batch_size=256,
-                                                        callback=Callback(10000, "val", "grad", "weights")))
+                                                        callback=Callback(10000, "val", "grad")))
 
     pkl_file_name = CACHE_DIR / "q7_cache.pickle"
     nn = fit_net(nn, train_X, train_y, pkl_file_name)
