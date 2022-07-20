@@ -151,7 +151,7 @@ def fit_net(nn, train_X, train_y, pkl_file_name):
     return nn
 
 
-def q7(train_X, train_y, test_X, test_y):
+def q7(train_X, train_y, test_X, test_y, net_only=False):
     modules7 = [
         FullyConnectedLayer(input_dim=n_features, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
         FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
@@ -162,7 +162,7 @@ def q7(train_X, train_y, test_X, test_y):
 
     pkl_file_name = CACHE_DIR / "q7_cache.pickle"
     nn = fit_net(nn, train_X, train_y, pkl_file_name)
-
+    if net_only: return nn
     pred = nn.predict(test_X)
     print(accuracy(test_y, pred))
     # Plotting convergence process
@@ -195,7 +195,7 @@ def q9(nn, test_X, test_y):
     # most_confident = sort_prediction_7[-hidden_size:]
     # least_confident = sort_prediction_7[:hidden_size]
 
-    pred = nn.compute_prediction(test_X_7).argsort()
+    pred = nn.compute_prediction(test_X_7).max(axis=1).argsort()
 
     fig1 = plot_images_grid(test_X_7[pred[-64:]], title="Most Confident")
     fig1.write_image(OUT_DIR / f"q9_most.svg")
@@ -239,12 +239,12 @@ if __name__ == '__main__':
     # Initialize, fit and test network
     hidden_size = 64
 
-    nn = q7(train_X, train_y, test_X, test_y)
+    nn = q7(train_X, train_y, test_X, test_y, True)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
     # ---------------------------------------------------------------------------------------------#
-    q8(train_X, train_y, test_X, test_y)
+    # q8(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 9: Most/Least confident predictions                                                 #
@@ -255,4 +255,4 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #
     # ---------------------------------------------------------------------------------------------#
-    q10(train_X, train_y)
+    # q10(train_X, train_y)
