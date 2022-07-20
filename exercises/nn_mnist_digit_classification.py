@@ -8,7 +8,7 @@ from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, 
 from IMLearn.learners.neural_networks.neural_network import NeuralNetwork
 from IMLearn.desent_methods import GradientDescent, StochasticGradientDescent, FixedLR
 from IMLearn.utils.utils import confusion_matrix
-from nn_simulated_data import plot_convergence, OUT_DIR, FIGS_WIDTH, FIGS_HEIGHT
+from nn_simulated_data import plot_convergence, OUT_DIR, FIGS_WIDTH, FIGS_HEIGHT, MARGINS_DICT
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -126,6 +126,7 @@ def plot_runtime_for_solver(train_X, train_y, solver, solver_name):
                                      title=rf"$\text{{Runtime Of {solver_name}}}$",
                                      xaxis=dict(title=r"$\text{Runtime [s]}$"),
                                      yaxis=dict(title=r"$\text{Loss}$")))
+    fig['layout'].update(margin=MARGINS_DICT)
     fig.write_image(OUT_DIR / f"q10_{solver_name}.svg")
     fig.show()
     return times, losses
@@ -200,9 +201,11 @@ def q9(nn, test_X, test_y):
 
     fig1 = plot_images_grid(test_X_7[pred[-64:]], title="Most Confident")
     fig1.write_image(OUT_DIR / f"q9_most.svg")
+    fig1['layout'].update(margin=MARGINS_DICT)
     fig1.show()
 
     fig2 = plot_images_grid(test_X_7[pred[:64]], title="Least Confident")
+    fig2['layout'].update(margin=MARGINS_DICT)
     fig2.write_image(OUT_DIR / f"q9_least.svg")
     fig2.show()
 
@@ -225,7 +228,7 @@ def q10(train_X, train_y):
         layout=go.Layout(width=FIGS_WIDTH, height=FIGS_HEIGHT, title=r"$\text{Runtime Differences Between SGD And GD}$",
                          xaxis=dict(title=r"$\text{Runtime [s]}$"),
                          yaxis=dict(title=r"$\text{Loss}$")))
-
+    fig['layout'].update(margin=fig['layout'].update(margin=MARGINS_DICT))
     fig.write_image(OUT_DIR / f"q10_runtime_diff.svg")
     fig.show()
 

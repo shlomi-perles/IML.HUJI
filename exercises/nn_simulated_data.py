@@ -18,6 +18,7 @@ from pathlib import Path
 OUT_DIR = Path(__file__).parent.parent.parent / "exrecise\ex7\plots"
 FIGS_WIDTH = 650
 FIGS_HEIGHT = 400
+MARGINS_DICT = dict(l=5, r=0, t=24, b=0)
 
 
 def generate_nonlinear_data(
@@ -124,7 +125,7 @@ def plot_and_show_nn(modules, out_dir, question_idx, hidden_size):
     print(accuracy(test_y, nn.predict(test_X)))
 
     fig = plot_decision_boundary(nn, lims, train_X, train_y, title=out_dir.stem)
-    fig['layout'].update(margin=dict(l=5, r=0, t=24, b=0))
+    fig['layout'].update(margin=MARGINS_DICT)
     fig.write_image(out_dir / f"decision_boundary{save_end_name}.svg")
     fig.show()
 
@@ -146,7 +147,7 @@ def plot_convergence(values, grads, hidden_size, modules, file_name):
                       xaxis=dict(title=r"$\text{Iteration}$"))
     fig.update_yaxes(title_text=r"$\text{Loss}$", secondary_y=False)
     fig.update_yaxes(title_text=r"$\text{Norm}$", secondary_y=True)
-    fig['layout'].update(margin=dict(l=5, r=0, t=24, b=0))
+    fig['layout'].update(margin=MARGINS_DICT)
     fig.write_image(file_name)
     fig.show()
 
