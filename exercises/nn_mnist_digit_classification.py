@@ -4,11 +4,11 @@ import gzip
 from typing import Tuple
 
 from IMLearn.metrics.loss_functions import accuracy, cross_entropy
-from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, CrossEntropyLoss, softmax
+from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, CrossEntropyLoss, softmax, Identity
 from IMLearn.learners.neural_networks.neural_network import NeuralNetwork
 from IMLearn.desent_methods import GradientDescent, StochasticGradientDescent, FixedLR
 from IMLearn.utils.utils import confusion_matrix
-
+from nn_simulated_data import get_callback, plot_convergence, OUT_DIR, Path
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -84,6 +84,18 @@ def plot_images_grid(images: np.ndarray, title: str = ""):
         .update_yaxes(showticklabels=False)
 
 
+def q8():
+    global callback, values, grads, out_weights, pred
+    modules8 = [FullyConnectedLayer(input_dim=n_features, output_dim=n_classes, activation=Identity(),
+                                    include_intercept=True)]
+    callback, values, grads, out_weights = get_callback()
+    nn8 = NeuralNetwork(modules=modules8, loss_fn=CrossEntropyLoss(),
+                        solver=StochasticGradientDescent(learning_rate=FixedLR(0.1), max_iter=10000, batch_size=256))
+    nn8.fit(train_X, train_y)
+    pred = nn.predict(test_X)
+    print(accuracy(test_y, pred))
+
+
 if __name__ == '__main__':
     train_X, train_y, test_X, test_y = load_mnist()
     (n_samples, n_features), n_classes = train_X.shape, 10
@@ -105,25 +117,67 @@ if __name__ == '__main__':
     # Question 5+6+7: Network with ReLU activations using SGD + recording convergence              #
     # ---------------------------------------------------------------------------------------------#
     # Initialize, fit and test network
-    raise NotImplementedError()
+    hidden_size = 64
+    modules7 = [
+        FullyConnectedLayer(input_dim=n_features, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
+        FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
+        FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(), include_intercept=True)]
 
+    callback, values, grads, out_weights = get_callback()
+
+    nn = NeuralNetwork(modules=modules7, loss_fn=CrossEntropyLoss(),
+                       solver=StochasticGradientDescent(learning_rate=FixedLR(0.1), max_iter=10000, batch_size=256,
+                                                        callback=callback))
+
+    nn.fit(train_X, train_y)
+    pred = nn.predict(test_X)
+    print(accuracy(test_y, pred))
+
+    save_end_name = f"_q{7}_hidsiz{hidden_size}"
     # Plotting convergence process
-    raise NotImplementedError()
+    plot_convergence(values, grads, hidden_size, modules7, OUT_DIR / f"convergence{save_end_name}.svg")
 
-    # Plotting test true- vs predicted confusion matrix
-    raise NotImplementedError()
+    print(confusion_matrix(pred, test_y))
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
     # ---------------------------------------------------------------------------------------------#
-    raise NotImplementedError()
+    q8()
 
     # ---------------------------------------------------------------------------------------------#
     # Question 9: Most/Least confident predictions                                                 #
     # ---------------------------------------------------------------------------------------------#
-    raise NotImplementedError()
+
+    test_X = test_X[test_y == 7]
+    test_y = test_y[test_y == 7]
+
+    # get 64 most confident samples
+    confidences = nn.compute_prediction(test_X)
+    seven_sorted_pics = np.argsort(np.max(pred_7, axis=1))
+
+    best = plot_images_grid(test_X_7[seven_sorted_pics[:64], :])
+    worst = plot_images_grid(test_X_7[seven_sorted_pics[-64:], :])
+
+    # plot 64 most confident samples
+    im = plot_images_grid(test_X[np.argsort(confidences)[-64:]].reshape(64, 784), title="Most confident")
+    im.show()
+    im = plot_images_grid(test_X[np.argsort(confidences)[:64]].reshape(64, 784), title="Least confident")
+    im.show()
+
+    inds7 = np.where(test_y == 7)[0]
+    samples_of_7 = test_X[inds7]
+    nn.compute_prediction(samples_of_7)
+    predictions = nn.post_activations[-1]
+    predicted_probs_of_7 = predictions[:, 7]
+    sorted_inds = np.argsort(predicted_probs_of_7)
+    most_confident = sorted_inds[-64:]
+    least_confident = sorted_inds[:64]
+    fig1 = plot_images_grid(samples_of_7[most_confident], title="Most Confident")
+    fig1.show()
+    fig2 = plot_images_grid(samples_of_7[least_confident], title="Least Confident")
+    fig2.show()
 
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #
     # ---------------------------------------------------------------------------------------------#
-    raise NotImplementedError()
+    # raise NotImplementedError()

@@ -110,7 +110,8 @@ def get_callback(**kwargs):
     return callback, values, grads, out_weights
 
 
-def plot_and_show_nn(modules, out_dir):
+def plot_and_show_nn(modules, out_dir, question_idx, hidden_size):
+    save_end_name = f"_q{question_idx}_hidsiz{hidden_size}"
     callback, values, grads, weights = get_callback()
     nn = NeuralNetwork(
         modules=modules,
@@ -121,9 +122,30 @@ def plot_and_show_nn(modules, out_dir):
     print(accuracy(test_y, nn.predict(test_X)))
 
     fig = plot_decision_boundary(nn, lims, train_X, train_y, title=out_dir.stem)
-    fig.write_image(out_dir)
+    fig['layout'].update(margin=dict(l=5, r=0, t=20, b=0))
+    fig.write_image(out_dir / f"decision_boundary{save_end_name}.svg")
     fig.show()
-    return nn, values, grads, weights
+
+    save_name = OUT_DIR / f"animation{save_end_name}.gif" if len(weights) > 101 else None
+    animate_decision_boundary(nn, weights[::100], lims, train_X, train_y, title="Simple Network",
+                              save_name=save_name)
+
+    plot_convergence(values, grads, hidden_size, modules, out_dir / f"convergence{save_end_name}.svg")
+
+
+def plot_convergence(values, grads, hidden_size, modules, file_name):
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Scatter(x=np.arange(1, len(values) + 1), y=values, name="Loss"))
+    fig.add_trace(
+        go.Scatter(x=np.arange(1, len(grads) + 1), y=[np.linalg.norm(grad) for grad in grads], name="Gradient Norms"),
+        secondary_y=True)
+    fig.update_layout(title_text=rf"$\text{{Convergence Process, hidden size={hidden_size}, layers={len(modules)}}}$",
+                      xaxis=dict(title=r"$\text{Iteration}$"))
+    fig.update_yaxes(title_text=r"$\text{Iteration}$", secondary_y=False)
+    fig.update_yaxes(title_text=r"$\text{Norm}$", secondary_y=True)
+    fig['layout'].update(margin=dict(l=5, r=0, t=20, b=0))
+    fig.write_image(file_name)
+    fig.show()
 
 
 if __name__ == '__main__':
@@ -146,39 +168,24 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------#
     hidden_size = 16
 
-    q1_modules = [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=hidden_size, activation=ReLU(),
-                                      include_intercept=True),
-                  FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(),
-                                      include_intercept=True),
-                  FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(),
-                                      include_intercept=True)]
+    modules_lst = [[FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=hidden_size, activation=ReLU(),
+                                        include_intercept=True),
+                    FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(),
+                                        include_intercept=True),
+                    FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(),
+                                        include_intercept=True)],
 
-    nn_1, _, _, _ = plot_and_show_nn(q1_modules, OUT_DIR / f"{len(q1_modules)}_layers_nn_{hidden_size}.png")
+                   [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=n_classes, activation=Identity(),
+                                        include_intercept=True)]]
 
     # ---------------------------------------------------------------------------------------------#
     # Question 2: Fitting a network with no hidden layers                                          #
     # ---------------------------------------------------------------------------------------------#
-    q2_modules = [FullyConnectedLayer(input_dim=train_X.shape[1], output_dim=n_classes, activation=Identity(),
-                                      include_intercept=True)]
-    nn_2, values, grads, weights = plot_and_show_nn(q1_modules,
-                                                    OUT_DIR / f"{len(q2_modules)}_layers_nn_{hidden_size}.png")
 
     # ---------------------------------------------------------------------------------------------#
     # Question 3+4: Plotting network convergence process                                           #
     # ---------------------------------------------------------------------------------------------#
 
-    # TODO:change
-    # take each 100th iteration of the gradient descent and plot the decision boundary
-    animate_decision_boundary(nn_2, weights[::100], lims, train_X, train_y, title="Simple Network",
-                              save_name=OUT_DIR / "simple_network_animation.gif")
-
-    # plot convergence of the objective function
-    fig = go.Figure(data=[go.Scatter(x=np.arange(1, len(values) + 1), y=values, name="Loss")],
-                    layout=go.Layout(title=r"$\text{Objective Function Convergence}$",
-                                     xaxis=dict(title=r"$\text{Iteration}$"),
-                                     yaxis=dict(title=r"$\text{Loss}$")))
-
-    # add norm of weights
-    fig.add_trace(
-        go.Scatter(x=np.arange(1, len(grads) + 1), y=[np.linalg.norm(grad) for grad in grads], name="Gradient Norms"))
-    fig.show()
+    for question_idx, modules in enumerate(modules_lst, start=1):
+        for hid_s in {16, 6}:
+            plot_and_show_nn(modules, OUT_DIR, question_idx, hid_s)
