@@ -150,6 +150,7 @@ def q7():
 def q9():
     test_X_7 = test_X[test_y == 7]
     test_y_7 = test_y[test_y == 7]
+
     prediction_7 = nn.compute_prediction(test_X)
     sort_prediction_7 = np.argsort(np.max(prediction_7, axis=1))
     most_confident = sort_prediction_7[-hidden_size:]
