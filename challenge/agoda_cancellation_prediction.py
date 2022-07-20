@@ -27,7 +27,6 @@ def load_data1(filename: str):
     2) Tuple of pandas.DataFrame and Series
     3) Tuple of ndarray of shape (n_samples, n_features) and ndarray of shape (n_samples,)
     """
-    # TODO - replace below code with any desired preprocessing
     full_data = pd.read_csv(filename).dropna().drop_duplicates()
     __add_time_between_booking_to_cancel(full_data)
     features = full_data[[
@@ -77,7 +76,6 @@ def load_classsifier(filename: str):
     3) Tuple of ndarray of shape (n_samples, n_features) and ndarray of shape (n_samples,)
     """
     # length of stay
-    # TODO - replace below code with any desired preprocessing
     full_data = pd.read_csv(filename).drop_duplicates()
     full_data = __add_did_cancel(full_data)
     features = full_data[[
@@ -115,7 +113,6 @@ def load_regression(filename: str):
     3) Tuple of ndarray of shape (n_samples, n_features) and ndarray of shape (n_samples,)
     """
     # length of stay
-    # TODO - replace below code with any desired preprocessing
     full_data = pd.read_csv(filename).drop_duplicates()
     full_data = __add_did_cancel(full_data)
     features = full_data[[

@@ -65,7 +65,7 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         responses : ndarray of shape (n_samples, )
             Predicted labels of given samples
         """
-        return np.argmax(self.compute_prediction(X=X), axis=1)  # TODO: post_actovation?
+        return np.argmax(self.compute_prediction(X=X), axis=1)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -175,7 +175,7 @@ class NeuralNetwork(BaseEstimator, BaseModule):
             post_activ = np.c_[np.ones(self.post_activations_[-i - 1].shape[0]), self.post_activations_[-i - 1]] \
                 if layer.include_intercept_ else self.post_activations_[-i - 1]
 
-            gradients[-i] = np.einsum('ij,ik->kj', delta, post_activ) / n_samples  # TODO:transpose?
+            gradients[-i] = np.einsum('ij,ik->kj', delta, post_activ) / n_samples
 
             if i < modules_num:
                 derive = self.modules_[-i - 1].activation_.compute_jacobian(X=self.pre_activations_[-i - 1])

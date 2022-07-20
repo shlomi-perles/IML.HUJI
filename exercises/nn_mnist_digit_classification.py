@@ -119,7 +119,7 @@ def plot_runtime_for_solver(train_X, train_y, solver, solver_name):
     nn_10 = fit_net(nn_10, train_X, train_y, pkl_file_name)
 
     times = np.array(nn_10.solver_.callback_.times) - nn_10.solver_.callback_.times[0]
-    losses = np.array(nn_10.solver_.callback_.val)  # TODO:mean?
+    losses = np.array(nn_10.solver_.callback_.val)
 
     fig = go.Figure(data=[go.Scatter(x=times, y=losses)],
                     layout=go.Layout(width=FIGS_WIDTH, height=FIGS_HEIGHT,
