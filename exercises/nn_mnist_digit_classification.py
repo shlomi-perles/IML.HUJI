@@ -188,17 +188,20 @@ def q8(train_X, train_y, test_X, test_y):
 
 def q9(nn, test_X, test_y):
     test_X_7 = test_X[test_y == 7]
-    test_y_7 = test_y[test_y == 7]
+    # test_y_7 = test_y[test_y == 7]
+    #
+    # prediction_7 = nn.compute_prediction(test_X)
+    # sort_prediction_7 = np.argsort(np.max(prediction_7, axis=1))
+    # most_confident = sort_prediction_7[-hidden_size:]
+    # least_confident = sort_prediction_7[:hidden_size]
 
-    prediction_7 = nn.compute_prediction(test_X)
-    sort_prediction_7 = np.argsort(np.max(prediction_7, axis=1))
-    most_confident = sort_prediction_7[-hidden_size:]
-    least_confident = sort_prediction_7[:hidden_size]
+    pred = nn.compute_prediction(test_X_7).argsort()
 
-    fig1 = plot_images_grid(test_X_7[most_confident, :], title="Most Confident")
+    fig1 = plot_images_grid(test_X_7[pred[-64:]], title="Most Confident")
     fig1.write_image(OUT_DIR / f"q9_most.svg")
     fig1.show()
-    fig2 = plot_images_grid(test_X_7[least_confident, :], title="Least Confident")
+
+    fig2 = plot_images_grid(test_X_7[pred[:64]], title="Least Confident")
     fig2.write_image(OUT_DIR / f"q9_least.svg")
     fig2.show()
 
@@ -236,18 +239,18 @@ if __name__ == '__main__':
     # Initialize, fit and test network
     hidden_size = 64
 
-    # nn = q7(train_X, train_y, test_X, test_y)
+    nn = q7(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
     # ---------------------------------------------------------------------------------------------#
-    # q8(train_X, train_y, test_X, test_y)
+    q8(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 9: Most/Least confident predictions                                                 #
     # ---------------------------------------------------------------------------------------------#
 
-    # q9(nn, test_X, test_y)
+    q9(nn, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #
