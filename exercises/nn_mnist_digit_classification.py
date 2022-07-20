@@ -167,7 +167,7 @@ def q7(train_X, train_y, test_X, test_y, net_only=False):
     if net_only: return nn
     pred = nn.predict(test_X)
     print(accuracy(test_y, pred))
-    # Plotting convergence process
+
     save_end_name = f"_q7_hidsiz{hidden_size}"
     plot_convergence(nn.solver_.callback_.val, nn.solver_.callback_.grad, hidden_size, modules7,
                      OUT_DIR / f"convergence{save_end_name}.svg")
@@ -196,12 +196,12 @@ def q9(nn, test_X, test_y):
     margins["t"] = 38
     margins["l"] = 0
     fig1 = plot_images_grid(test_X_7[pred[-64:]], title="Most Confident")
-    fig1['layout'].update(margin=margins)
+    fig1['layout'].update(width=FIGS_HEIGHT, height=FIGS_HEIGHT, margin=margins)
     fig1.write_image(OUT_DIR / f"q9_most.svg")
     fig1.show()
 
     fig2 = plot_images_grid(test_X_7[pred[:64]], title="Least Confident")
-    fig2['layout'].update(margin=margins)
+    fig2['layout'].update(width=FIGS_HEIGHT, height=FIGS_HEIGHT, margin=margins)
     fig2.write_image(OUT_DIR / f"q9_least.svg")
     fig2.show()
 
