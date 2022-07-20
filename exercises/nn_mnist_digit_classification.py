@@ -214,7 +214,8 @@ def q10(train_X, train_y):
                                                     StochasticGradientDescent(max_iter=10000,
                                                                               learning_rate=FixedLR(0.1),
                                                                               tol=1e-10, batch_size=64,
-                                                                              callback=Callback("times", "val")), "SGD")
+                                                                              callback=Callback(10000, "times", "val"))
+                                                    , "SGD")
     fig = go.Figure(
         data=[go.Scatter(x=times_gd, y=losses_gd, name='GD'), go.Scatter(x=times_sgd, y=losses_sgd, name='SGD')],
         layout=go.Layout(title=r"$\text{Runtime Differences Between SGD And GD}$",
