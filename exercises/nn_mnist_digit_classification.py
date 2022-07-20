@@ -105,7 +105,7 @@ def q8():
     print(accuracy(test_y, pred))
 
 
-def q10(solver, solver_name):
+def plot_runtime_for_solver(solver, solver_name):
     callback, times, losses = get_time_callback(y=train_y_q10)
 
     nn_10 = NeuralNetwork(
@@ -129,6 +129,56 @@ def q10(solver, solver_name):
     return times, losses
 
 
+def q7():
+    modules7 = [
+        FullyConnectedLayer(input_dim=n_features, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
+        FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
+        FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(), include_intercept=True)]
+    nn = NeuralNetwork(modules=modules7, loss_fn=CrossEntropyLoss(),
+                       solver=StochasticGradientDescent(learning_rate=FixedLR(0.1), max_iter=10000, batch_size=256,
+                                                        callback=callback))
+    nn.fit(train_X, train_y)
+    pred = nn.predict(test_X)
+    print(accuracy(test_y, pred))
+    # Plotting convergence process
+    save_end_name = f"_q7_hidsiz{hidden_size}"
+    plot_convergence(values, grads, hidden_size, modules7, OUT_DIR / f"convergence{save_end_name}.svg")
+    print(confusion_matrix(pred, test_y))
+    return nn
+
+
+def q9():
+    test_X_7 = test_X[test_y == 7]
+    test_y_7 = test_y[test_y == 7]
+    prediction_7 = nn.compute_prediction(test_X)
+    sort_prediction_7 = np.argsort(np.max(prediction_7, axis=1))
+    most_confident = sort_prediction_7[-hidden_size:]
+    least_confident = sort_prediction_7[:hidden_size]
+    fig1 = plot_images_grid(test_X_7[most_confident, :], title="Most Confident")
+    fig1.write_image(OUT_DIR / f"q9_most.svg")
+    fig1.show()
+    fig2 = plot_images_grid(test_X_7[least_confident, :], title="Least Confident")
+    fig2.write_image(OUT_DIR / f"q9_least.svg")
+    fig2.show()
+
+
+def q10():
+    global train_X_q10, train_y_q10
+    train_X_q10 = train_X[:2500]
+    train_y_q10 = train_y[:2500]
+    times_gd, losses_gd = plot_runtime_for_solver(
+        GradientDescent(max_iter=10000, learning_rate=FixedLR(1e-1), callback=callback, tol=1e-10), "GD")
+    times_sgd, losses_sgd = plot_runtime_for_solver(
+        GradientDescent(max_iter=10000, learning_rate=FixedLR(1e-1), callback=callback, tol=1e-10), "SGD")
+    fig = go.Figure(
+        data=[go.Scatter(x=times_gd, y=losses_gd, name='GD'), go.Scatter(x=times_sgd, y=losses_sgd, name='SGD')],
+        layout=go.Layout(title=r"$\text{Runtime Differences Between SGD And GD}$",
+                         xaxis=dict(title=r"$\text{Runtime [s]}$"),
+                         yaxis=dict(title=r"$\text{Loss}$")))
+    fig.write_image(OUT_DIR / f"q10_runtime_diff.svg")
+    fig.show()
+
+
 if __name__ == '__main__':
     train_X, train_y, test_X, test_y = load_mnist()
     (n_samples, n_features), n_classes = train_X.shape, 10
@@ -138,26 +188,9 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------#
     # Initialize, fit and test network
     hidden_size = 64
-    modules7 = [
-        FullyConnectedLayer(input_dim=n_features, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
-        FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
-        FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(), include_intercept=True)]
-
     callback, values, grads, out_weights = get_callback()
 
-    nn = NeuralNetwork(modules=modules7, loss_fn=CrossEntropyLoss(),
-                       solver=StochasticGradientDescent(learning_rate=FixedLR(0.1), max_iter=10000, batch_size=256,
-                                                        callback=callback))
-
-    nn.fit(train_X, train_y)
-    pred = nn.predict(test_X)
-    print(accuracy(test_y, pred))
-
-    # Plotting convergence process
-    save_end_name = f"_q7_hidsiz{hidden_size}"
-    plot_convergence(values, grads, hidden_size, modules7, OUT_DIR / f"convergence{save_end_name}.svg")
-
-    print(confusion_matrix(pred, test_y))
+    nn = q7()
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
@@ -168,37 +201,9 @@ if __name__ == '__main__':
     # Question 9: Most/Least confident predictions                                                 #
     # ---------------------------------------------------------------------------------------------#
 
-    test_X_7 = test_X[test_y == 7]
-    test_y_7 = test_y[test_y == 7]
-
-    prediction_7 = nn.compute_prediction(test_X)
-    sort_prediction_7 = np.argsort(np.max(prediction_7, axis=1))
-
-    most_confident = sort_prediction_7[-hidden_size:]
-    least_confident = sort_prediction_7[:hidden_size]
-    fig1 = plot_images_grid(test_X_7[most_confident, :], title="Most Confident")
-    fig1.write_image(OUT_DIR / f"q9_most.svg")
-    fig1.show()
-
-    fig2 = plot_images_grid(test_X_7[least_confident, :], title="Least Confident")
-    fig2.write_image(OUT_DIR / f"q9_least.svg")
-    fig2.show()
+    q9()
 
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #
     # ---------------------------------------------------------------------------------------------#
-    train_X_q10 = train_X[:2500]
-    train_y_q10 = train_y[:2500]
-
-    times_gd, losses_gd = q10(
-        GradientDescent(max_iter=10000, learning_rate=FixedLR(1e-1), callback=callback, tol=1e-10), "GD")
-    times_sgd, losses_sgd = q10(
-        GradientDescent(max_iter=10000, learning_rate=FixedLR(1e-1), callback=callback, tol=1e-10), "SGD")
-
-    fig = go.Figure(
-        data=[go.Scatter(x=times_gd, y=losses_gd, name='GD'), go.Scatter(x=times_sgd, y=losses_sgd, name='SGD')],
-        layout=go.Layout(title=r"$\text{Runtime Differences Between SGD And GD}$",
-                         xaxis=dict(title=r"$\text{Runtime [s]}$"),
-                         yaxis=dict(title=r"$\text{Loss}$")))
-    fig.write_image(OUT_DIR / f"q10_runtime_diff.svg")
-    fig.show()
+    q10()
