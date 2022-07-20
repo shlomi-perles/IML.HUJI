@@ -141,7 +141,7 @@ def plot_convergence(values, grads, hidden_size, modules, file_name):
         secondary_y=True)
     fig.update_layout(title_text=rf"$\text{{Convergence Process, hidden size={hidden_size}, layers={len(modules)}}}$",
                       xaxis=dict(title=r"$\text{Iteration}$"))
-    fig.update_yaxes(title_text=r"$\text{Iteration}$", secondary_y=False)
+    fig.update_yaxes(title_text=r"$\text{Loss}$", secondary_y=False)
     fig.update_yaxes(title_text=r"$\text{Norm}$", secondary_y=True)
     fig['layout'].update(margin=dict(l=5, r=0, t=20, b=0))
     fig.write_image(file_name)
