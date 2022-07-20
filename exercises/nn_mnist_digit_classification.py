@@ -8,7 +8,7 @@ from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, 
 from IMLearn.learners.neural_networks.neural_network import NeuralNetwork
 from IMLearn.desent_methods import GradientDescent, StochasticGradientDescent, FixedLR
 from IMLearn.utils.utils import confusion_matrix
-from nn_simulated_data import plot_convergence, OUT_DIR, Path
+from nn_simulated_data import plot_convergence, OUT_DIR, FIGS_WIDTH, FIGS_HEIGHT
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -122,7 +122,8 @@ def plot_runtime_for_solver(train_X, train_y, solver, solver_name):
     losses = np.array(nn_10.solver_.callback_.val)  # TODO:mean?
 
     fig = go.Figure(data=[go.Scatter(x=times, y=losses)],
-                    layout=go.Layout(title=rf"$\text{{Runtime Of {solver_name}}}$",
+                    layout=go.Layout(width=FIGS_WIDTH, height=FIGS_HEIGHT,
+                                     title=rf"$\text{{Runtime Of {solver_name}}}$",
                                      xaxis=dict(title=r"$\text{Runtime [s]}$"),
                                      yaxis=dict(title=r"$\text{Loss}$")))
     fig.write_image(OUT_DIR / f"q10_{solver_name}.svg")
@@ -221,7 +222,7 @@ def q10(train_X, train_y):
                                                     , "SGD")
     fig = go.Figure(
         data=[go.Scatter(x=times_gd, y=losses_gd, name='GD'), go.Scatter(x=times_sgd, y=losses_sgd, name='SGD')],
-        layout=go.Layout(title=r"$\text{Runtime Differences Between SGD And GD}$",
+        layout=go.Layout(width=FIGS_WIDTH, height=FIGS_HEIGHT, title=r"$\text{Runtime Differences Between SGD And GD}$",
                          xaxis=dict(title=r"$\text{Runtime [s]}$"),
                          yaxis=dict(title=r"$\text{Loss}$")))
 
@@ -239,12 +240,12 @@ if __name__ == '__main__':
     # Initialize, fit and test network
     hidden_size = 64
 
-    nn = q7(train_X, train_y, test_X, test_y, True)
+    nn = q7(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
     # ---------------------------------------------------------------------------------------------#
-    # q8(train_X, train_y, test_X, test_y)
+    q8(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 9: Most/Least confident predictions                                                 #
@@ -255,4 +256,4 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #
     # ---------------------------------------------------------------------------------------------#
-    # q10(train_X, train_y)
+    q10(train_X, train_y)

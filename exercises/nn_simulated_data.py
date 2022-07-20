@@ -16,6 +16,8 @@ pio.templates.default = "simple_white"
 from pathlib import Path
 
 OUT_DIR = Path(__file__).parent.parent.parent / "exrecise\ex7\plots"
+FIGS_WIDTH = 650
+FIGS_HEIGHT = 400
 
 
 def generate_nonlinear_data(
@@ -122,7 +124,7 @@ def plot_and_show_nn(modules, out_dir, question_idx, hidden_size):
     print(accuracy(test_y, nn.predict(test_X)))
 
     fig = plot_decision_boundary(nn, lims, train_X, train_y, title=out_dir.stem)
-    fig['layout'].update(margin=dict(l=5, r=0, t=20, b=0))
+    fig['layout'].update(margin=dict(l=5, r=0, t=24, b=0))
     fig.write_image(out_dir / f"decision_boundary{save_end_name}.svg")
     fig.show()
 
@@ -139,11 +141,12 @@ def plot_convergence(values, grads, hidden_size, modules, file_name):
     fig.add_trace(
         go.Scatter(x=np.arange(1, len(grads) + 1), y=[np.linalg.norm(grad) for grad in grads], name="Norm"),
         secondary_y=True)
-    fig.update_layout(title_text=rf"$\text{{Convergence Process, hidden size={hidden_size}, layers={len(modules)}}}$",
+    fig.update_layout(width=FIGS_WIDTH, height=FIGS_HEIGHT,
+                      title_text=rf"$\text{{Convergence Process, hidden size={hidden_size}, layers={len(modules)}}}$",
                       xaxis=dict(title=r"$\text{Iteration}$"))
     fig.update_yaxes(title_text=r"$\text{Loss}$", secondary_y=False)
     fig.update_yaxes(title_text=r"$\text{Norm}$", secondary_y=True)
-    fig['layout'].update(margin=dict(l=5, r=0, t=20, b=0))
+    fig['layout'].update(margin=dict(l=5, r=0, t=24, b=0))
     fig.write_image(file_name)
     fig.show()
 
