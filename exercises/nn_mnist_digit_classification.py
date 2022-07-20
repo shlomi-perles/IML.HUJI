@@ -15,7 +15,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
 
+import pickle
+
 pio.templates.default = "simple_white"
+CACHE_DIR = OUT_DIR.parent / "tmpFiles"
+USE_CACHE = True
+SAVE_CACHE = True
 
 
 def load_mnist() -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -84,29 +89,35 @@ def plot_images_grid(images: np.ndarray, title: str = ""):
         .update_yaxes(showticklabels=False)
 
 
-def get_time_callback(**kwargs):
-    times = []
-    losses = []
-
-    def callback(**kwargs):
-        times.append(time.time())
-        losses.append(np.mean(kwargs["val"]))
-
-    return callback, times, losses
-
-
-def q8():
+def q8(train_X, train_y, test_X, test_y):
     modules8 = [FullyConnectedLayer(input_dim=n_features, output_dim=n_classes, activation=Identity(),
                                     include_intercept=True)]
     nn8 = NeuralNetwork(modules=modules8, loss_fn=CrossEntropyLoss(),
                         solver=StochasticGradientDescent(learning_rate=FixedLR(0.1), max_iter=10000, batch_size=256))
-    nn8.fit(train_X, train_y)
-    pred = nn.predict(test_X)
+
+    pkl_file_name = CACHE_DIR / "q8_cache.pickle"
+    nn8 = fit_net(nn8, train_X, train_y, pkl_file_name)
+
+    pred = nn8.predict(test_X)
     print(accuracy(test_y, pred))
 
 
-def plot_runtime_for_solver(solver, solver_name):
-    callback, times, losses = get_time_callback(y=train_y_q10)
+class Callback:
+    def __init__(self, *args):
+        self.args_ = args
+        for key in args:
+            setattr(object, key, [])
+
+    def __call__(self, *args, **kwargs):
+        for att, value in self.__dict__.items():
+            if att == "time":
+                value.append(time.time())
+                continue
+            value.append(kwargs[att])
+
+
+def plot_runtime_for_solver(train_X, train_y, solver, solver_name):
+    callback, times, losses = get_time_callback(y=train_X)
 
     nn_10 = NeuralNetwork(
         modules=[FullyConnectedLayer(input_dim=n_features, output_dim=hidden_size, activation=ReLU(),
@@ -116,9 +127,13 @@ def plot_runtime_for_solver(solver, solver_name):
                  FullyConnectedLayer(input_dim=hidden_size, output_dim=n_classes, activation=Identity(),
                                      include_intercept=True)],
         loss_fn=CrossEntropyLoss(), solver=solver)
-    nn_10.fit(train_X_q10, train_y_q10)
+
+    pkl_file_name = CACHE_DIR / f"q10_{solver_name}_cache.pickle"
+    call_back_dict = dict(times=times, losses=losses)
+    nn_10 = fit_net(nn_10, train_X, train_y, pkl_file_name, call_back_dict)
+
     times = np.array(times) - times[0]
-    losses = np.array(times)
+    losses = np.array(losses)  # RODO:mean?
 
     fig = go.Figure(data=[go.Scatter(x=times, y=losses)],
                     layout=go.Layout(title=rf"$\text{{Runtime Of {solver_name}}}$",
@@ -129,7 +144,35 @@ def plot_runtime_for_solver(solver, solver_name):
     return times, losses
 
 
-def q7():
+def fit_net(nn, train_X, train_y, pkl_file_name, other_pikles_dict=None):
+    found_cache = False
+
+    if USE_CACHE and pkl_file_name.exists():
+        found_cache = True
+
+        with open(pkl_file_name, 'rb') as pkl_file:
+            nn = pickle.load(pkl_file)
+            if other_pikles_dict:
+                for key, value in other_pikles_dict.items():
+                    for i, pkl_item in enumerate(pickle.load(pkl_file)):
+                        other_pikles_dict[key][i] = pkl_item
+
+        print(f"Using cache for {pkl_file_name.stem}")
+    else:
+        nn.fit(train_X, train_y)
+
+    if SAVE_CACHE and not found_cache:
+        with open(pkl_file_name, 'wb') as pkl_file:
+            pickle.dump(nn, pkl_file)
+            if other_pikles_dict:
+                for key, value in other_pikles_dict.items():
+                    pickle.dump(value, pkl_file)
+        print(f"Cached {pkl_file_name.stem}")
+    return nn
+
+
+def q7(train_X, train_y, test_X, test_y):
+    callback = Callback("values", "grads", "out_weights")
     modules7 = [
         FullyConnectedLayer(input_dim=n_features, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
         FullyConnectedLayer(input_dim=hidden_size, output_dim=hidden_size, activation=ReLU(), include_intercept=True),
@@ -137,7 +180,11 @@ def q7():
     nn = NeuralNetwork(modules=modules7, loss_fn=CrossEntropyLoss(),
                        solver=StochasticGradientDescent(learning_rate=FixedLR(0.1), max_iter=10000, batch_size=256,
                                                         callback=callback))
-    nn.fit(train_X, train_y)
+
+    pkl_file_name = CACHE_DIR / "q7_cache.pickle"
+    call_back_dict = dict(values=values, grads=grads, out_weights=out_weights)
+    nn = fit_net(nn, train_X, train_y, pkl_file_name, call_back_dict)
+
     pred = nn.predict(test_X)
     print(accuracy(test_y, pred))
     # Plotting convergence process
@@ -147,7 +194,7 @@ def q7():
     return nn
 
 
-def q9():
+def q9(nn, test_X, test_y):
     test_X_7 = test_X[test_y == 7]
     test_y_7 = test_y[test_y == 7]
 
@@ -155,6 +202,7 @@ def q9():
     sort_prediction_7 = np.argsort(np.max(prediction_7, axis=1))
     most_confident = sort_prediction_7[-hidden_size:]
     least_confident = sort_prediction_7[:hidden_size]
+
     fig1 = plot_images_grid(test_X_7[most_confident, :], title="Most Confident")
     fig1.write_image(OUT_DIR / f"q9_most.svg")
     fig1.show()
@@ -163,19 +211,21 @@ def q9():
     fig2.show()
 
 
-def q10():
-    global train_X_q10, train_y_q10
+def q10(train_X, train_y):
     train_X_q10 = train_X[:2500]
     train_y_q10 = train_y[:2500]
-    times_gd, losses_gd = plot_runtime_for_solver(
-        GradientDescent(max_iter=10000, learning_rate=FixedLR(1e-1), callback=callback, tol=1e-10), "GD")
-    times_sgd, losses_sgd = plot_runtime_for_solver(
-        GradientDescent(max_iter=10000, learning_rate=FixedLR(1e-1), callback=callback, tol=1e-10), "SGD")
+    times_gd, losses_gd = plot_runtime_for_solver(train_X_q10, train_y_q10,
+                                                  GradientDescent(max_iter=10000, learning_rate=FixedLR(0.1),
+                                                                  tol=1e-10), "GD")
+    times_sgd, losses_sgd = plot_runtime_for_solver(train_X_q10, train_y_q10,
+                                                    GradientDescent(max_iter=10000, learning_rate=FixedLR(0.1),
+                                                                    tol=1e-10), "SGD")
     fig = go.Figure(
         data=[go.Scatter(x=times_gd, y=losses_gd, name='GD'), go.Scatter(x=times_sgd, y=losses_sgd, name='SGD')],
         layout=go.Layout(title=r"$\text{Runtime Differences Between SGD And GD}$",
                          xaxis=dict(title=r"$\text{Runtime [s]}$"),
                          yaxis=dict(title=r"$\text{Loss}$")))
+
     fig.write_image(OUT_DIR / f"q10_runtime_diff.svg")
     fig.show()
 
@@ -189,22 +239,21 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------------------------------#
     # Initialize, fit and test network
     hidden_size = 64
-    callback, values, grads, out_weights = get_callback()
 
-    nn = q7()
+    nn = q7(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
     # ---------------------------------------------------------------------------------------------#
-    q8()
+    q8(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 9: Most/Least confident predictions                                                 #
     # ---------------------------------------------------------------------------------------------#
 
-    q9()
+    q9(nn, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #
     # ---------------------------------------------------------------------------------------------#
-    q10()
+    q10(train_X, train_y)
