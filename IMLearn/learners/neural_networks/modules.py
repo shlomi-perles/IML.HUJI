@@ -76,11 +76,14 @@ class FullyConnectedLayer(BaseModule):
 
         if self.include_intercept_:
             X = np.c_[np.ones(X.shape[0]), X]
+        Xw = X @ self.weights
+        if "pre" in kwargs:
+            kwargs["pre"][kwargs["idx"]] = Xw
 
         if self.activation_:
-            return self.activation_.compute_output(X=X @ self.weights, **kwargs)
+            return self.activation_.compute_output(X=Xw, **kwargs)
 
-        return X @ self.weights
+        return Xw
 
     def compute_jacobian(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -96,10 +99,9 @@ class FullyConnectedLayer(BaseModule):
         output: ndarray of shape (input_dim, n_samples)
             Derivative with respect to self.weights at point self.weights
         """
-        if self.include_intercept_:
-            X = np.c_[np.ones(X.shape[0]), X]
-
-        return np.einsum('ij,ik,ijk', X, self.activation_.compute_jacobian(X=X @ self.weights, **kwargs))
+        if self.activation_:
+            return self.activation_.compute_jacobian(X=X, **kwargs)
+        return np.ones(X.shape)
 
 
 class ReLU(BaseModule):
@@ -137,7 +139,8 @@ class ReLU(BaseModule):
         output: ndarray of shape (n_samples,)
             Element-wise derivative of ReLU with respect to given data
         """
-        return np.sign(self.compute_output(X))
+
+        return np.where(X > 0, np.ones(X.shape), np.zeros(X.shape))
 
 
 class CrossEntropyLoss(BaseModule):
@@ -164,6 +167,8 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples,)
             cross-entropy loss value of given X and y
         """
+        import pandas as pd
+        return cross_entropy(pd.get_dummies(y).to_numpy(), softmax(X))
         return cross_entropy(y, softmax(X))
 
     def compute_jacobian(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
@@ -183,6 +188,8 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples, input_dim)
             derivative of cross-entropy loss with respect to given input
         """
+        import pandas as pd
+        return softmax(X) - pd.get_dummies(y).to_numpy()
         subs = np.zeros_like(X)
         subs[np.arange(X.shape[0]), y] = 1
         return softmax(X) - subs

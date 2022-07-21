@@ -110,16 +110,12 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         -----
         Function stores all intermediate values in the `self.pre_activations_` and `self.post_activations_` arrays
         """
-        self.pre_activations_[0] = 0
+        self.pre_activations_[0] = 0  # TODO:remove 0?
         self.post_activations_[0] = X.copy()
 
         for t, layer in enumerate(self.modules_):
-            self.pre_activations_[t + 1] = np.c_[
-                                               np.ones(self.post_activations_[t].shape[0]), self.post_activations_[
-                                                   t]] @ layer.weights \
-                if layer.include_intercept_ else self.post_activations_[t] @ layer.weights
-
-            self.post_activations_[t + 1] = layer.compute_output(X=self.post_activations_[t])
+            self.post_activations_[t + 1] = layer.compute_output(X=self.post_activations_[t], pre=self.pre_activations_,
+                                                                 idx=t + 1)
 
         return np.mean(self.loss_fn_.compute_output(X=self.post_activations_[-1], y=y, **kwargs))
 
@@ -165,11 +161,27 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         Function depends on values calculated in forward pass and stored in
         `self.pre_activations_` and `self.post_activations_`
         """
+        # derivatives=[]
+        # deriv = self.loss_fn_.compute_jacobian(X=self.post_activations_[-1], y=y)
+        # for i in range(len(self.modules_)):
+        #     module = self.modules_[len(self.modules_) - i - 1]
+        #     weights = module.weights.T
+        #     input = self.pre_activations_[len(self.modules_) - i]
+        #     activation = self.post_activations_[len(self.modules_) - i - 1]
+        #     if module.include_intercept_:
+        #         weights, activation = self._intercept(weights, activation)
+        #     temp = module.activation_.compute_jacobian(input) * deriv
+        #     deriv = temp @ weights
+        #     derivatives.append((temp.T @ activation).T)
+        # derivatives = [i/len(X) for i in reversed(derivatives)]
+
+        # self.compute_output(X=X, y=y, **kwargs)  # TODO:needed?
         gradients = np.empty(len(self.modules_), dtype=object)
         modules_num = len(self.modules_)
 
         delta = self.modules_[-1].activation_.compute_jacobian(
             X=self.pre_activations_[-1]) * self.loss_fn_.compute_jacobian(X=self.post_activations_[-1], y=y)
+
         n_samples = len(X)
         for i, layer in enumerate(reversed(self.modules_), start=1):
             post_activ = np.c_[np.ones(self.post_activations_[-i - 1].shape[0]), self.post_activations_[-i - 1]] \
@@ -185,6 +197,12 @@ class NeuralNetwork(BaseEstimator, BaseModule):
                 delta = np.einsum('ji,ki->jk', delta, layer.weights[start_idx:, :]) * derive
 
         return self._flatten_parameters(gradients)
+
+    def _intercept(self, weights, activation):
+        return np.delete(weights, 0, axis=1), self._add_column(activation)
+
+    def _add_column(self, activation):
+        return np.c_[np.ones(activation.shape[0]), activation]
 
     @property
     def weights(self) -> np.ndarray:

@@ -162,5 +162,5 @@ class StochasticGradientDescent:
         jac = f.compute_jacobian(X=X, y=y)
         eta = self.learning_rate_.lr_step(t=t)
 
-        f.weights = f.weights - eta * jac
+        f.weights = f.weights - eta * jac / np.linalg.norm(jac)
         return val, jac, eta

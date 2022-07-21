@@ -130,7 +130,7 @@ class GradientDescent:
         while t < self.max_iter_:
             last_weights = f.weights
             eta = self.learning_rate_.lr_step(t=t)
-            f.weights = f.weights - eta * grad
+            f.weights = f.weights - eta * grad / np.linalg.norm(grad)
             delta = np.linalg.norm(f.weights - last_weights, ord=2)
             if delta < self.tol_: break
 
