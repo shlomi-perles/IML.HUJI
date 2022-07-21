@@ -104,7 +104,6 @@ def plot_runtime_for_solver(train_X, train_y, solver, solver_name):
 
     times = np.array(nn_10.solver_.callback_.times) - nn_10.solver_.callback_.times[0]
     losses = np.array(nn_10.solver_.callback_.val)
-
     fig = go.Figure(data=[go.Scatter(x=times, y=losses)],
                     layout=go.Layout(width=FIGS_WIDTH, height=FIGS_HEIGHT,
                                      title=rf"$\text{{Runtime Of {solver_name}}}$",
@@ -223,18 +222,18 @@ if __name__ == '__main__':
     # Initialize, fit and test network
     hidden_size = 64
 
-    nn = q7(train_X, train_y, test_X, test_y)
+    # nn = q7(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
     # ---------------------------------------------------------------------------------------------#
-    q8(train_X, train_y, test_X, test_y)
+    # q8(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 9: Most/Least confident predictions                                                 #
     # ---------------------------------------------------------------------------------------------#
 
-    q9(nn, test_X, test_y)
+    # q9(nn, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #

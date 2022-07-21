@@ -143,10 +143,8 @@ def plot_and_show_nn(modules, out_dir, question_idx, hidden_size):
 
 def plot_convergence(values, grads, hidden_size, modules, file_name):
     fig = make_subplots(specs=[[{"secondary_y": True}]])
-    fig.add_trace(go.Scatter(x=np.arange(1, len(values) + 1), y=values, name="Loss"))
-    fig.add_trace(
-        go.Scatter(x=np.arange(1, len(grads) + 1), y=grads, name="Norm"),
-        secondary_y=True)
+    fig.add_trace(go.Scatter(x=np.arange(1, len(values) + 1), y=values, name="Loss"), secondary_y=True)
+    fig.add_trace(go.Scatter(x=np.arange(1, len(grads) + 1), y=grads, name="Grad Norm"))
     fig.update_layout(width=FIGS_WIDTH, height=FIGS_HEIGHT,
                       title_text=rf"$\text{{Convergence Process, hidden size={hidden_size}, layers={len(modules)}}}$",
                       xaxis=dict(title=r"$\text{Iteration}$"))

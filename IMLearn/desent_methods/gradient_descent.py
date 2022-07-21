@@ -126,7 +126,6 @@ class GradientDescent:
         grad = f.compute_jacobian(X=X, y=y)
 
         t = 0
-        n = X.shape[1]
         while t < self.max_iter_:
             last_weights = f.weights
             eta = self.learning_rate_.lr_step(t=t)
