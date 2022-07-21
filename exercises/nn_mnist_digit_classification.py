@@ -178,6 +178,7 @@ def q9(nn, test_X, test_y):
     margins = MARGINS_DICT.copy()
     margins["t"] = 38
     margins["l"] = 0
+
     fig1 = plot_images_grid(test_X_7[pred[-64:]], title="Most Confident")
     fig1['layout'].update(width=FIGS_HEIGHT, height=FIGS_HEIGHT, margin=margins)
     fig1.write_image(OUT_DIR / f"q9_most.svg")
@@ -222,18 +223,18 @@ if __name__ == '__main__':
     # Initialize, fit and test network
     hidden_size = 64
 
-    # nn = q7(train_X, train_y, test_X, test_y)
+    nn = q7(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 8: Network without hidden layers using SGD                                          #
     # ---------------------------------------------------------------------------------------------#
-    # q8(train_X, train_y, test_X, test_y)
+    q8(train_X, train_y, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 9: Most/Least confident predictions                                                 #
     # ---------------------------------------------------------------------------------------------#
 
-    # q9(nn, test_X, test_y)
+    q9(nn, test_X, test_y)
 
     # ---------------------------------------------------------------------------------------------#
     # Question 10: GD vs GDS Running times                                                         #
