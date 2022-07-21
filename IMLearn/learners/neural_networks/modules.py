@@ -167,8 +167,6 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples,)
             cross-entropy loss value of given X and y
         """
-        import pandas as pd
-        return cross_entropy(pd.get_dummies(y).to_numpy(), softmax(X))
         return cross_entropy(y, softmax(X))
 
     def compute_jacobian(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
@@ -188,8 +186,6 @@ class CrossEntropyLoss(BaseModule):
         output: ndarray of shape (n_samples, input_dim)
             derivative of cross-entropy loss with respect to given input
         """
-        import pandas as pd
-        return softmax(X) - pd.get_dummies(y).to_numpy()
         subs = np.zeros_like(X)
         subs[np.arange(X.shape[0]), y] = 1
         return softmax(X) - subs

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import time
 from typing import Tuple, List
 from IMLearn.metrics.loss_functions import accuracy
 from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, CrossEntropyLoss, Identity
@@ -112,6 +113,18 @@ def get_callback(**kwargs):
 
     return callback, values, grads, out_weights
 
+class Callback:
+    def __init__(self, iterations=1, *args):
+        self.idx_ = 0
+        for key in args:
+            setattr(self, key, np.zeros(iterations))
+
+    def __call__(self, *args, **kwargs):
+        for att, value in self.__dict__.items():
+            if att.endswith("_"): continue
+            add = time.time() if att == "times" else np.linalg.norm(kwargs[att]) if att == "grad" else kwargs[att]
+            value[self.idx_] = add
+        self.idx_ += 1
 
 def plot_and_show_nn(modules, out_dir, question_idx, hidden_size):
     save_end_name = f"_q{question_idx}_hidsiz{hidden_size}"

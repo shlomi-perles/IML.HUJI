@@ -110,7 +110,7 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         -----
         Function stores all intermediate values in the `self.pre_activations_` and `self.post_activations_` arrays
         """
-        self.pre_activations_[0] = 0  # TODO:remove 0?
+        self.pre_activations_[0] = 0
         self.post_activations_[0] = X.copy()
 
         for t, layer in enumerate(self.modules_):
@@ -161,21 +161,6 @@ class NeuralNetwork(BaseEstimator, BaseModule):
         Function depends on values calculated in forward pass and stored in
         `self.pre_activations_` and `self.post_activations_`
         """
-        # derivatives=[]
-        # deriv = self.loss_fn_.compute_jacobian(X=self.post_activations_[-1], y=y)
-        # for i in range(len(self.modules_)):
-        #     module = self.modules_[len(self.modules_) - i - 1]
-        #     weights = module.weights.T
-        #     input = self.pre_activations_[len(self.modules_) - i]
-        #     activation = self.post_activations_[len(self.modules_) - i - 1]
-        #     if module.include_intercept_:
-        #         weights, activation = self._intercept(weights, activation)
-        #     temp = module.activation_.compute_jacobian(input) * deriv
-        #     deriv = temp @ weights
-        #     derivatives.append((temp.T @ activation).T)
-        # derivatives = [i/len(X) for i in reversed(derivatives)]
-
-        # self.compute_output(X=X, y=y, **kwargs)  # TODO:needed?
         gradients = np.empty(len(self.modules_), dtype=object)
         modules_num = len(self.modules_)
 
