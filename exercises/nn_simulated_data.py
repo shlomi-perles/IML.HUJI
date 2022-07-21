@@ -1,17 +1,16 @@
-import numpy as np
-import pandas as pd
 import time
 from typing import Tuple, List
-from IMLearn.metrics.loss_functions import accuracy
-from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, CrossEntropyLoss, Identity
-from IMLearn.learners.neural_networks.neural_network import NeuralNetwork
-from IMLearn.desent_methods import GradientDescent, FixedLR
-from IMLearn.utils.utils import split_train_test
-from utils import *
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import plotly.io as pio
+from plotly.subplots import make_subplots
+
+from IMLearn.desent_methods import GradientDescent, FixedLR
+from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, CrossEntropyLoss, Identity
+from IMLearn.learners.neural_networks.neural_network import NeuralNetwork
+from IMLearn.metrics.loss_functions import accuracy
+from IMLearn.utils.utils import split_train_test
+from utils import *
 
 pio.templates.default = "simple_white"
 from pathlib import Path
@@ -101,22 +100,13 @@ def animate_decision_boundary(nn: NeuralNetwork, weights: List[np.ndarray], lims
         animation_to_gif(fig, save_name, 200, width=400, height=400)
 
 
-def get_callback(**kwargs):
-    values = []
-    grads = []
-    out_weights = []
-
-    def callback(**kwargs):
-        values.append(kwargs["val"])
-        grads.append(np.linalg.norm(kwargs["grad"]))
-        out_weights.append(kwargs["weights"])
-
-    return callback, values, grads, out_weights
-
 class Callback:
     def __init__(self, iterations=1, *args):
         self.idx_ = 0
         for key in args:
+            if key == "weights":
+                setattr(self, key, np.empty(iterations, dtype=object))
+                continue
             setattr(self, key, np.zeros(iterations))
 
     def __call__(self, *args, **kwargs):
@@ -126,13 +116,14 @@ class Callback:
             value[self.idx_] = add
         self.idx_ += 1
 
+
 def plot_and_show_nn(modules, out_dir, question_idx, hidden_size):
     save_end_name = f"_q{question_idx}_hidsiz{hidden_size}"
-    callback, values, grads, weights = get_callback()
     nn = NeuralNetwork(
         modules=modules,
         loss_fn=CrossEntropyLoss(),
-        solver=GradientDescent(max_iter=5000, learning_rate=FixedLR(0.1), callback=callback))
+        solver=GradientDescent(max_iter=5000, learning_rate=FixedLR(0.1),
+                               callback=Callback(5000, "val", "grad", "weights")))
 
     nn.fit(train_X, train_y)
     print(accuracy(test_y, nn.predict(test_X)))
@@ -142,11 +133,12 @@ def plot_and_show_nn(modules, out_dir, question_idx, hidden_size):
     fig.write_image(out_dir / f"decision_boundary{save_end_name}.svg")
     fig.show()
 
-    save_name = OUT_DIR / f"animation{save_end_name}.gif" if len(weights) > 101 else None
-    animate_decision_boundary(nn, weights[::100], lims, train_X, train_y, title="Simple Network",
+    save_name = OUT_DIR / f"animation{save_end_name}.gif" if len(nn.solver_.callback_.weights) > 101 else None
+    animate_decision_boundary(nn, nn.solver_.callback_.weights[::100], lims, train_X, train_y, title="Simple Network",
                               save_name=save_name)
 
-    plot_convergence(values, grads, hidden_size, modules, out_dir / f"convergence{save_end_name}.svg")
+    plot_convergence(nn.solver_.callback_.val, nn.solver_.callback_.grad, hidden_size, modules,
+                     out_dir / f"convergence{save_end_name}.svg")
 
 
 def plot_convergence(values, grads, hidden_size, modules, file_name):

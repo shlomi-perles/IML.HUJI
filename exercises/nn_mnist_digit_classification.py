@@ -8,7 +8,7 @@ from IMLearn.learners.neural_networks.modules import FullyConnectedLayer, ReLU, 
 from IMLearn.learners.neural_networks.neural_network import NeuralNetwork
 from IMLearn.desent_methods import GradientDescent, StochasticGradientDescent, FixedLR
 from IMLearn.utils.utils import confusion_matrix
-from nn_simulated_data import plot_convergence, OUT_DIR, FIGS_WIDTH, FIGS_HEIGHT, MARGINS_DICT
+from nn_simulated_data import plot_convergence, Callback, OUT_DIR, FIGS_WIDTH, FIGS_HEIGHT, MARGINS_DICT
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -87,20 +87,6 @@ def plot_images_grid(images: np.ndarray, title: str = ""):
                        font=dict(size=16), coloraxis_showscale=False) \
         .update_xaxes(showticklabels=False) \
         .update_yaxes(showticklabels=False)
-
-
-class Callback:
-    def __init__(self, iterations=1, *args):
-        self.idx_ = 0
-        for key in args:
-            setattr(self, key, np.zeros(iterations))
-
-    def __call__(self, *args, **kwargs):
-        for att, value in self.__dict__.items():
-            if att.endswith("_"): continue
-            add = time.time() if att == "times" else np.linalg.norm(kwargs[att]) if att == "grad" else kwargs[att]
-            value[self.idx_] = add
-        self.idx_ += 1
 
 
 def plot_runtime_for_solver(train_X, train_y, solver, solver_name):

@@ -99,9 +99,11 @@ class FullyConnectedLayer(BaseModule):
         output: ndarray of shape (input_dim, n_samples)
             Derivative with respect to self.weights at point self.weights
         """
+        if self.include_intercept_:
+            X = np.c_[np.ones(X.shape[0]), X]
         if self.activation_:
-            return self.activation_.compute_jacobian(X=X, **kwargs)
-        return np.ones(X.shape)
+            return self.activation_.compute_jacobian(X=X @ self.weights, **kwargs)
+        return np.ones((X.shape[1], X.shape[0]))
 
 
 class ReLU(BaseModule):
